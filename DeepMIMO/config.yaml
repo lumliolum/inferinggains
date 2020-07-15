@@ -1,0 +1,39 @@
+fnn:
+  input_path: "DeepMIMODataset/deepmimo_dataset_I1_2p4_32_xant_1_ofdm_5_paths.mat"
+  output_path: "DeepMIMODataset/deepmimo_dataset_I1_2p5_32_xant_1_ofdm_5_paths.mat"
+  locations_path: "DeepMIMODataset/locations.mat"
+  train_val_test_split: [0.7,0.1,0.2]
+  hidden_dim: [256,512,512]
+  feats_to_include: [1,2,4]
+  lr: 0.001
+  weight_decay: 0.0001
+  batch_size: 128
+  epochs: 100
+  add_noise: False
+  snr: 
+  device: cpu
+  seed: 42
+  model_save_path: "models/threehiddenlayer.bin"
+  savefig: "results/deepmimo/channel_gains_32_xant.png"
+  predict_for_autoencoder: True
+  autoencoder_save_path: "DeepMIMO Dataset/deepmimo_dataset_I1_estimated_2p5_with_feats_32_xant_1_ofdm_5_paths.mat"
+
+autoencoder:
+  input_path: "DeepMIMODataset/deepmimo_dataset_I1_2p4_32_xant_1_ofdm_5_paths.mat"
+  downlink_path: "DeepMIMODataset/deepmimo_dataset_I1_2p5_32_xant_1_ofdm_5_paths.mat"
+  locations_path: "DeepMIMODataset/locations.mat"
+  feats_to_include: [1,2,4]
+  k: 4
+  n: 4
+  training_ebnodb: 25
+  train_val_test_split: [0.7,0.1,0.2]
+  lr: 0.0001
+  weight_decay: 0
+  batch_size: 1024
+  epochs: 100
+  device: cpu
+  seed: 0
+  model_save_path: "models/autoencoder_uplink+feats_downlink_32_xant.bin"
+  loss_save_path: "results/autoencoder/train_val_loss_for_uplink+feats_downlink_32_xant.png"
+  blerber_save_path: "results/autoencoder/uplink+feats_downlink_32_xant.csv"
+  blerbercurve_save_path: "results/autoencoder/bler_ber_for_uplink+feats_downlink_32_xant.png"

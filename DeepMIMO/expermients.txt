@@ -1,0 +1,15 @@
+To do:
+- solve for bs coordiantes
+- add noise only to test data and see the performance check
+- try one bit information.
+---------------------------------------
+- add noise levels to inputs to both train and test with var  1/20, 1/200, 1/2000 of expected mod h square. Extension
+  to output in future.
+- generate dataset for one subcarrier , 64(128) antenna, train with network and save the nmse.
+----------------------------------------
+-  train autoencoder for downlink-downlink, uplink-downlink, uplink+loc-downlink 
+- use detach in model.forward
+
+July 15 2020
+- Completed the channel predictions experiments
+- Completed the autoencoder experiments for 128,64,32 antennas. This was done for all five schemes mentioned in the report.

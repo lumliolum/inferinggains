@@ -1,0 +1,8 @@
+# ignored folders are listed here
+.vscode/
+__pycache__/
+DeepMIMO/__pycache__/
+DeepMIMO/.vscode/
+DeepMIMO/paperimplementation/.vscode/
+DeepMIMO/results/.ipynb_checkpoints/
+testing/.ipynb_checkpoints
