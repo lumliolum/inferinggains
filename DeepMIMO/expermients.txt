@@ -13,3 +13,6 @@ To do:
 July 15 2020
 - Completed the channel predictions experiments
 - Completed the autoencoder experiments for 128,64,32 antennas. This was done for all five schemes mentioned in the report.
+
+Rerun Experiments
+- 64 ofdm 5 paths for all possible feature combinations and noise levels completed (start : 26/07/2020 end : 01/08/2020)

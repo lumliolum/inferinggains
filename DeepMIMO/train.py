@@ -72,6 +72,8 @@ def main():
         feats, feats_mean, feats_std = None, None, None
     output_mean = np.mean(output_data[train_row_indices, :], axis=0)
     output_std = np.std(output_data[train_row_indices, :], axis=0)
+    # output_mean = 0
+    # output_std = 1e-5
     train_dataset = DeepMIMODataset(input_data, feats, output_data, input_mean, input_std, feats_mean, feats_std,
                                     output_mean, output_std, user_indices=train_row_indices, add_noise=add_noise, snr=snr)
     val_dataset = DeepMIMODataset(input_data, feats, output_data, input_mean, input_std, feats_mean, feats_std,
