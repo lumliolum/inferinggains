@@ -185,10 +185,11 @@ def main():
             round((t2-t1).total_seconds()), round(train_cross_entropy, 5),
             round(val_cross_entropy, 5)))
         if val_cross_entropy < best_cross_entropy:
-            print("val cross entropy decreases from {} to {}.Saving the model at {}".format(round(best_cross_entropy, 5), round(val_cross_entropy, 5), fname))
+            print("val cross entropy decreases from {} to {}. Saving the model at {}".format(round(best_cross_entropy, 5), round(val_cross_entropy, 5), fname))
             torch.save(model.state_dict(), fname)
             best_cross_entropy = val_cross_entropy
     
+    print("The validation entropy is", round(best_cross_entropy), 5)
     # loading the model
     model = AutoEncoder(M=M,
                         n=n,
@@ -199,7 +200,8 @@ def main():
     model.eval()
     
     # testing(for various ranges of SNR)
-    snr_range = np.linspace(-20,20,41)
+    lb,ub = params['testing_ebnodb'][0],params['testing_ebnodb'][1]
+    snr_range = np.linspace(lb,ub,ub-lb+1)
     bler = np.zeros((len(snr_range),))
     ber = np.zeros((len(snr_range),))
     for i in tqdm.tqdm(range(len(snr_range))):
@@ -258,8 +260,8 @@ def main():
     bler_no_noise = 1.0 - accuracy
     bitaccuracy = np.mean((test_targets == test_preds))
     ber_no_noise = 1.0-bitaccuracy
-    print("The bler for zero noise is", bler_no_noise)
-    print("The ber for zero noise is", ber_no_noise)
+    print("The bler for zero noise is", round(bler_no_noise), 7)
+    print("The ber for zero noise is", round(ber_no_noise), 7)
 
     # plotting the train loss and validation loss
     plt.plot(list(range(1, epochs+1)), train_loss, label='train')
