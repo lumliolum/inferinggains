@@ -19,10 +19,9 @@ fnn:
   autoencoder_save_path: "DeepMIMODataset/deepmimo_dataset_I1_estimated_2p5_with_feats_128_xant_1_ofdm_5_paths.mat"
 
 autoencoder:
-  input_path: "DeepMIMODataset/deepmimo_dataset_I1_2p4_128_xant_1_ofdm_5_paths.mat"
-  downlink_path: "DeepMIMODataset/deepmimo_dataset_I1_2p5_128_xant_1_ofdm_5_paths.mat"
-  locations_path: "DeepMIMODataset/locations.mat"
-  feats_to_include: [1,2,4]
+  scheme: 2
+  method: 'bin_seq'
+  feats_to_include: []
   k: 4
   n: 4
   training_ebnodb: 15
@@ -31,10 +30,7 @@ autoencoder:
   lr: 0.0001
   weight_decay: 0
   batch_size: 1024
-  epochs: 100
+  epochs: 50
   device: cpu
   seed: 0
-  model_save_path: "models/autoencoder_128_xant.bin"
-  loss_save_path: "results/autoencoder/train_val_loss_for_uplink+feats_downlink_128_xant.png"
-  blerber_save_path: "results/autoencoder/uplink+feats_downlink_128_xant.csv"
-  blerbercurve_save_path: "results/autoencoder/bler_ber_for_uplink+feats_downlink_128_xant.png"
+  

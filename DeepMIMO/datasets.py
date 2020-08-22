@@ -1,6 +1,6 @@
 import numpy as np
 from torch.utils.data import Dataset
-from utils import one_hot
+from utils import one_hot, bin_seq
 
 
 class DeepMIMODataset(Dataset):
@@ -71,19 +71,21 @@ class DeepMIMODataset(Dataset):
 
 class AutoEncoderDataset(Dataset):
     def __init__(self, input_data, feats,
-                 downlink_data, msg_len, input_mean, input_std, feats_mean,
-                 feats_std, downlink_mean, downlink_std, user_indices=None, 
+                 downlink_data, k, M, input_mean, input_std, feats_mean,
+                 feats_std, downlink_mean, downlink_std, method, user_indices=None, 
                  generate_messages=True, message_matrix=None):
         self.input_data = input_data
         self.feats = feats
         self.downlink_data = downlink_data
-        self.msg_len = msg_len
+        self.k = k
+        self.M = M
         self.input_mean = input_mean
         self.input_std = input_std
         self.feats_mean = feats_mean
         self.feats_std = feats_std
         self.downlink_mean = downlink_mean
         self.downlink_std = downlink_std
+        self.method = method
         self.user_indices = user_indices
         self.generate_messages = generate_messages
         self.message_matrix = message_matrix
@@ -112,13 +114,16 @@ class AutoEncoderDataset(Dataset):
         downlink_data = (downlink_data-self.downlink_mean)/self.downlink_std
         if self.generate_messages:
             # creating the message signal (one hot vector)
-            m_hot = np.random.randint(low=0, high=self.msg_len)
-            m_hot = np.squeeze(one_hot(m_hot, d=self.msg_len))
+            message = np.random.randint(low=0, high=2**self.k)
+            if self.method=='one_hot':
+                message = np.squeeze(one_hot(message, d=self.M))
+            elif self.method=='bin_seq':
+                message = np.squeeze(bin_seq(message, d=self.M))
         else:
-            m_hot = self.message_matrix[index,:]
+            message = self.message_matrix[index,:]
         if self.feats is not None:
             input_data = np.append(input_data, feats_data)
-        input_data = np.append(input_data, m_hot)
+        input_data = np.append(input_data, message)
         return {"input": input_data,
-                'message': m_hot,
+                'message': message,
                 'downlink': downlink_data}

@@ -38,7 +38,7 @@ class FNN(nn.Module):
 
 
 class AutoEncoder(nn.Module):
-    def __init__(self, M, n, num_ant, input_dim, device=torch.device('cpu')):
+    def __init__(self, M, n, num_ant, input_dim, method, device=torch.device('cpu')):
         """
             M: length of message vector
             n: number of channel uses
@@ -51,6 +51,7 @@ class AutoEncoder(nn.Module):
         self.n = n
         self.num_ant = num_ant
         self.input_dim = input_dim
+        self.method = method
         self.device = device
 
         # encoder layer(transmitter)
@@ -63,6 +64,7 @@ class AutoEncoder(nn.Module):
 
         self.relu = nn.ReLU()
         self.softmax = nn.Softmax(dim=1)
+        self.sigmoid = nn.Sigmoid()
 
     def forward(self, input_data, downlink_data, noise_std):
         h_encoder = self.relu(self.encoder_layer1(input_data))
@@ -92,5 +94,8 @@ class AutoEncoder(nn.Module):
                 h_decoder = torch.cat([h_decoder, r], dim=1)
 
         h_decoder = self.relu(self.decoder_layer1(h_decoder))
-        h_decoder = self.softmax(self.decoder_layer2(h_decoder))
+        if self.method=='one_hot':
+            h_decoder = self.softmax(self.decoder_layer2(h_decoder))
+        elif self.method=='bin_seq':
+            h_decoder = self.sigmoid(self.decoder_layer2(h_decoder))
         return h_decoder

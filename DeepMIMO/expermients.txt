@@ -20,4 +20,4 @@ Rerun Experiments
 - 128 antenna(one hot encoding) autoencoder experiments completed (start : 07/08/2020 end : 10/08/2020)
 
 Ongoing Experiments
-- Check the performances when message is one hot encoded or sequenced (start : end : )
+- Check the performances when message vector is one hot encoded or binary sequenced (start : 11/08/2020 end : 22/08/2020)

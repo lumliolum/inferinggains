@@ -9,6 +9,17 @@ def accuracy(y_true, y_pred):
     return np.sum(y_true == y_pred)/y_true.shape[0]
 
 
+# converting an array of numbers to their binary representation with d bits
+def bin_seq(s, d):
+    if isinstance(s, int):
+        s = np.array([s])
+    b = []
+    for n in s:
+        b.append(list(map(int, np.binary_repr(n, width=d))))
+    b = np.array(b)
+    return b
+
+
 # bits per second
 def bps(target, pred, mfactor=1, snr=1e10):
     """
@@ -123,3 +134,51 @@ def set_seed(seed, device):
         torch.cuda.manual_seed_all(seed)
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
+
+def set_params_autoencoder(params):
+    method = params['method']
+    params['locations_path'] = "DeepMIMODataset/locations.mat"
+    if params['scheme']==1:
+        params['input_path'] = "DeepMIMODataset/deepmimo_dataset_I1_2p5_128_xant_1_ofdm_5_paths.mat"
+        params['downlink_path'] = "DeepMIMODataset/deepmimo_dataset_I1_2p5_128_xant_1_ofdm_5_paths.mat"
+        
+        params['model_save_path'] = "models/autoencoder_downlink_downlink_128_xant_{0}.bin".format(method)
+        params['loss_save_path'] = "results/autoencoder/train_val_loss_for_downlink_downlink_128_xant_{0}.png".format(method)
+        params['blerber_save_path'] = "results/autoencoder/downlink_downlink_128_xant_{0}.csv".format(method)
+        params['blerbercurve_save_path'] = "results/autoencoder/bler_ber_for_downlink_downlink_128_xant_{0}.png".format(method)
+    elif params['scheme']==2:
+        params['input_path'] = "DeepMIMODataset/deepmimo_dataset_I1_estimated_2p5_128_xant_1_ofdm_5_paths.mat"
+        params['downlink_path'] = "DeepMIMODataset/deepmimo_dataset_I1_2p5_128_xant_1_ofdm_5_paths.mat"
+        
+        params['model_save_path'] = "models/autoencoder_estimateddownlink_downlink_128_xant_{0}.bin".format(method)
+        params['loss_save_path'] = "results/autoencoder/train_val_loss_for_estimateddownlink_downlink_128_xant_{0}.png".format(method)
+        params['blerber_save_path'] = "results/autoencoder/estimateddownlink_downlink_128_xant_{0}.csv".format(method)
+        params['blerbercurve_save_path'] = "results/autoencoder/bler_ber_for_estimateddownlink_downlink_128_xant.png".format(method)
+    elif params['scheme']==3:
+        params['input_path'] = "DeepMIMODataset/deepmimo_dataset_I1_estimated_2p5_with_feats_128_xant_1_ofdm_5_paths.mat"
+        params['downlink_path'] = "DeepMIMODataset/deepmimo_dataset_I1_2p5_128_xant_1_ofdm_5_paths.mat"
+
+        params['model_save_path'] = "models/autoencoder_estimateddownlink+feats_downlink_128_xant_{0}.bin".format(method)
+        params['loss_save_path'] = "results/autoencoder/train_val_loss_for_estimateddownlink+feats_downlink_128_xant_{0}.png".format(method)
+        params['blerber_save_path'] = "results/autoencoder/estimateddownlink+feats_downlink_128_xant_{0}.csv".format(method)
+        params['blerbercurve_save_path'] = "results/autoencoder/bler_ber_for_estimateddownlink+feats_downlink_128_xant_{0}.png".format(method)
+    elif params['scheme']==4:
+        params['input_path'] = "DeepMIMODataset/deepmimo_dataset_I1_2p4_128_xant_1_ofdm_5_paths.mat"
+        params['downlink_path'] = "DeepMIMODataset/deepmimo_dataset_I1_2p5_128_xant_1_ofdm_5_paths.mat"
+
+        params['model_save_path'] = "models/autoencoder_uplink_downlink_128_xant_{0}.bin".format(method)
+        params['loss_save_path'] = "results/autoencoder/train_val_loss_for_uplink_downlink_128_xant_{0}.png".format(method)
+        params['blerber_save_path'] = "results/autoencoder/uplink_downlink_128_xant_{0}.csv".format(method)
+        params['blerbercurve_save_path'] = "results/autoencoder/bler_ber_for_uplink_downlink_128_xant_{0}.png".format(method)
+    elif params['scheme']==5:
+        params['input_path'] = "DeepMIMODataset/deepmimo_dataset_I1_2p4_128_xant_1_ofdm_5_paths.mat"
+        params['downlink_path'] = "DeepMIMODataset/deepmimo_dataset_I1_2p5_128_xant_1_ofdm_5_paths.mat"
+
+        params['model_save_path'] = "models/autoencoder_uplink+feats_downlink_128_xant_{0}.bin".format(method)
+        params['loss_save_path'] = "results/autoencoder/train_val_loss_for_uplink+feats_downlink_128_xant_{0}.png".format(method)
+        params['blerber_save_path'] = "results/autoencoder/uplink+feats_downlink_128_xant_{0}.csv".format(method)
+        params['blerbercurve_save_path'] = "results/autoencoder/bler_ber_for_uplink+feats_downlink_128_xant_{0}.png".format(method)
+    else:
+        raise Exception("Scheme {} is not available".format(params['scheme']))
+
+    return params

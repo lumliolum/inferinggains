@@ -14,7 +14,8 @@ from models import AutoEncoder
 from losses import CrossEntropyLoss
 from datasets import AutoEncoderDataset
 from utils import set_seed, construction, crossentropy, \
-                  accuracy, read_yaml, EbNo2Sigma, one_hot
+                  accuracy, read_yaml, EbNo2Sigma, one_hot, \
+                  bin_seq, set_params_autoencoder
 
 
 def main():
@@ -24,11 +25,22 @@ def main():
     config = read_yaml(filename)
     params = config['autoencoder']
 
+    scheme = params['scheme']
+    method = params['method']
+    params = set_params_autoencoder(params)
     fname = params['model_save_path']
     feats_to_include = params['feats_to_include']
     k = params['k']
     n = params['n']
-    M = 2**k
+
+    # assigning value M
+    if method=="one_hot":
+        M = 2**k
+    elif method=='bin_seq':
+        M = k
+    else:
+        raise Exception("{} method not available".format(method))
+
     training_ebnodb = params['training_ebnodb']
     lr = params['lr']
     weight_decay = params['weight_decay']
@@ -64,6 +76,8 @@ def main():
     train_row_indices = row_indices[:train_num_rows]
     val_row_indices = row_indices[train_num_rows:-test_num_rows]
     test_row_indices = row_indices[-test_num_rows:]
+
+    print("scheme = {0}, method = {1}".format(scheme, method))
     print("train size = {} val size = {} test size = {}".format(train_num_rows, val_num_rows, test_num_rows))
 
     # calculating mean and std over training set
@@ -79,37 +93,42 @@ def main():
     downlink_std = np.std(downlink_data[train_row_indices, :], axis=0)
 
     # generating message vectors for test data.
-    test_message_matrix = one_hot(np.random.randint(low=0, high=M, 
-                                                     size=(test_num_rows, )), d=M)
-    
-    train_dataset = AutoEncoderDataset(input_data, feats, downlink_data, M,
+    test_message_matrix = np.random.randint(low=0, high=2**k,
+                                                     size=(test_num_rows, ))
+    if method=='one_hot':
+        test_message_matrix = one_hot(test_message_matrix, d=M)
+    elif method=='bin_seq':
+        test_message_matrix = bin_seq(test_message_matrix, d=M)
+
+    train_dataset = AutoEncoderDataset(input_data, feats, downlink_data, k, M,
                                        input_mean, input_std, feats_mean,
-                                       feats_std, downlink_mean, downlink_std,
-                                       user_indices=train_row_indices)
+                                       feats_std, downlink_mean, downlink_std, method=method,
+                                       user_indices=train_row_indices, generate_messages=True)
 
-    val_dataset = AutoEncoderDataset(input_data, feats, downlink_data, M,
+    val_dataset = AutoEncoderDataset(input_data, feats, downlink_data, k, M,
                                      input_mean, input_std, feats_mean,
-                                     feats_std, downlink_mean, downlink_std,
-                                     user_indices=val_row_indices)
+                                     feats_std, downlink_mean, downlink_std, method=method,
+                                     user_indices=val_row_indices, generate_messages=True)
 
-    test_dataset = AutoEncoderDataset(input_data, feats, downlink_data, M,
+    test_dataset = AutoEncoderDataset(input_data, feats, downlink_data, k, M,
                                       input_mean, input_std, feats_mean,
-                                      feats_std, downlink_mean, downlink_std,
+                                      feats_std, downlink_mean, downlink_std, method=method,
                                       user_indices=test_row_indices, generate_messages=False,
                                       message_matrix=test_message_matrix)
 
 
-    # model initialization
     print("input dim = {0}, message length = {1}, number of channel uses = {2}".format(2*num_ant+feats_dim+M,M,n))
     print("learning rate = {0}, batch size = {1}, epochs = {2}".format(lr, batch_size, epochs))
+    # model initialization
     model = AutoEncoder(M=M,
                         n=n,
                         num_ant=num_ant,
                         input_dim=2*num_ant+feats_dim+M,
+                        method=method,
                         device=device)
     model.float()
     model.to(device)
-    
+
     train_loader = DataLoader(train_dataset,
                               batch_size=batch_size, shuffle=True)
 
@@ -120,7 +139,7 @@ def main():
                              batch_size=batch_size, shuffle=False)
 
     # loss function and optimizer
-    loss_fn = CrossEntropyLoss()
+    loss_fn = CrossEntropyLoss(method)
 
     optimizer = optim.Adam(model.parameters(), lr=lr,
                            weight_decay=weight_decay)
@@ -189,12 +208,13 @@ def main():
             torch.save(model.state_dict(), fname)
             best_cross_entropy = val_cross_entropy
     
-    print("The validation entropy is", round(best_cross_entropy), 5)
+    print("The validation entropy is {}".format(round(best_cross_entropy, 5)))
     # loading the model
     model = AutoEncoder(M=M,
                         n=n,
                         num_ant=num_ant,
                         input_dim=2*num_ant+feats_dim+M,
+                        method=method,
                         device=device)
     model.load_state_dict(torch.load(fname))
     model.eval()
@@ -204,6 +224,7 @@ def main():
     snr_range = np.linspace(lb,ub,ub-lb+1)
     bler = np.zeros((len(snr_range),))
     ber = np.zeros((len(snr_range),))
+    lossvalues = np.zeros((len(snr_range),))
     for i in tqdm.tqdm(range(len(snr_range))):
         noise_std = EbNo2Sigma(snr_range[i], k, n)
         test_preds = np.zeros((test_num_rows, M))
@@ -218,19 +239,26 @@ def main():
                 test_preds[index:index+input_data.shape[0]] = m_hat.cpu().detach().squeeze().numpy()
                 test_targets[index:index+input_data.shape[0]] = m.cpu().detach().squeeze().numpy()
                 index = index + input_data.shape[0]
-
-        # converting to one hot vector
-        idx = np.argmax(test_preds, axis=1)
-        test_preds = np.zeros(test_preds.shape)
-        test_preds[np.arange(test_preds.shape[0]), idx] = 1
-
-        accuracy = (np.argmax(test_targets, axis=1) == np.argmax(test_preds, axis=1))
-        accuracy = np.mean(accuracy)
-        block_error_rate = 1.0 - accuracy
-        bitaccuracy = np.mean((test_targets == test_preds))
-        bit_error_rate = 1.0-bitaccuracy
-        bler[i] = block_error_rate
-        ber[i] = bit_error_rate
+        lossvalues[i] = crossentropy(test_targets, test_preds)
+        if method=='one_hot':
+            # converting to one hot vector
+            idx = np.argmax(test_preds, axis=1)
+            test_preds = np.zeros(test_preds.shape)
+            test_preds[np.arange(test_preds.shape[0]), idx] = 1
+            accuracy = np.mean((np.sum((test_targets == test_preds), axis=1)) == M)
+            block_error_rate = 1.0 - accuracy
+            bitaccuracy = np.mean((test_targets == test_preds))
+            bit_error_rate = 1.0 - bitaccuracy
+            bler[i] = block_error_rate
+            ber[i] = bit_error_rate
+        elif method=='bin_seq':
+            test_preds = (test_preds>0.5).astype(int)
+            accuracy = np.mean((np.sum((test_targets == test_preds), axis=1)) == M)
+            block_error_rate = 1.0 - accuracy
+            bitaccuracy = np.mean((test_targets == test_preds))
+            bit_error_rate = 1.0 - bitaccuracy
+            bler[i] = block_error_rate
+            ber[i] = bit_error_rate
 
     # testing for no noise
     noise_std = 0
@@ -249,19 +277,26 @@ def main():
             index = index + input_data.shape[0]
             logger = str(index)+'/'+str(len(test_dataset))
             print(logger, end='\r')
-    
-    # converting to one hot vector
-    idx = np.argmax(test_preds, axis=1)
-    test_preds = np.zeros(test_preds.shape)
-    test_preds[np.arange(test_preds.shape[0]), idx] = 1
 
-    accuracy = (np.argmax(test_targets, axis=1) == np.argmax(test_preds, axis=1))
-    accuracy = np.mean(accuracy)
-    bler_no_noise = 1.0 - accuracy
-    bitaccuracy = np.mean((test_targets == test_preds))
-    ber_no_noise = 1.0-bitaccuracy
-    print("The bler for zero noise is", round(bler_no_noise), 7)
-    print("The ber for zero noise is", round(ber_no_noise), 7)
+    if method=='one_hot':
+        # converting to one hot vector
+        idx = np.argmax(test_preds, axis=1)
+        test_preds = np.zeros(test_preds.shape)
+        test_preds[np.arange(test_preds.shape[0]), idx] = 1
+
+        accuracy = np.mean((np.sum((test_targets == test_preds), axis=1)) == M)
+        bler_no_noise = 1.0 - accuracy
+        bitaccuracy = np.mean((test_targets == test_preds))
+        ber_no_noise = 1.0 - bitaccuracy
+    elif method=='bin_seq':
+        test_preds = (test_preds>0.5).astype(int)
+        accuracy = np.mean((np.sum((test_targets == test_preds), axis=1)) == M)
+        bler_no_noise = 1.0 - accuracy
+        bitaccuracy = np.mean((test_targets == test_preds))
+        ber_no_noise = 1.0 - bitaccuracy
+
+    print("The bler for zero noise is", round(bler_no_noise,7))
+    print("The ber for zero noise is", round(ber_no_noise, 7))
 
     # plotting the train loss and validation loss
     plt.plot(list(range(1, epochs+1)), train_loss, label='train')
@@ -278,6 +313,7 @@ def main():
     results['snr'] = snr_range
     results['bler'] = bler
     results['ber'] = ber
+    results['loss'] = lossvalues
     results.to_csv(params['blerber_save_path'], index=False)
     print(results.head())
 
