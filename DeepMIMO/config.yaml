@@ -19,9 +19,9 @@ fnn:
   autoencoder_save_path: "DeepMIMODataset/deepmimo_dataset_I1_estimated_2p5_with_feats_128_xant_1_ofdm_5_paths.mat"
 
 autoencoder:
-  scheme: 5
+  scheme: 2
   method: 'one_hot'
-  feats_to_include: [1,2,4]
+  feats_to_include: []
   k: 4
   n: 4
   training_ebnodb: 15
@@ -30,7 +30,7 @@ autoencoder:
   lr: 0.0001
   weight_decay: 0
   batch_size: 1024
-  epochs: 100
+  epochs: 50
   device: cpu
-  seed: 0
+  seed: 42
   
