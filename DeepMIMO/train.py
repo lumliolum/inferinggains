@@ -198,22 +198,27 @@ def main():
     predict_for_autoencoder = params['predict_for_autoencoder']
     if predict_for_autoencoder:
         print("For autoencoder")
-        # new_input_data = loadmat("DeepMIMO Dataset/deepmimo_dataset_I1_2p4_128_xant_1_ofdm_5_paths_second_half.mat")['channelgains']
-        # new_output_data = loadmat("DeepMIMO Dataset/deepmimo_dataset_I1_2p5_128_xant_1_ofdm_5_paths_second_half.mat")['channelgains']
-        # new_locations = loadmat("DeepMIMO Dataset/locations_second_half.mat")['locations']
+        if params['use_new_data']:
+            new_input_data = loadmat("DeepMIMODataset/deepmimo_dataset_I1_2p4_128_xant_1_ofdm_5_paths_second_half.mat")['channelgains']
+            new_output_data = loadmat("DeepMIMODataset/deepmimo_dataset_I1_2p5_128_xant_1_ofdm_5_paths_second_half.mat")['channelgains']
+            new_locations = loadmat("DeepMIMODataset/locations_second_half.mat")['locations']
 
-        # # reshaping
-        # new_input_data = new_input_data.reshape((new_input_data.shape[0], -1))
-        # new_output_data = new_output_data.reshape((new_output_data.shape[0], -1))
+            # reshaping
+            new_input_data = new_input_data.reshape((new_input_data.shape[0], -1))
+            new_output_data = new_output_data.reshape((new_output_data.shape[0], -1))
 
-        # new_input_data = construction(new_input_data)
-        # new_output_data = construction(new_output_data)
-        # new_feats = new_locations[:,feats_to_include]
-        # if feats_dim==0:
-        #     new_feats = None
-        # prediction on data
-        test_dataset = DeepMIMODataset(input_data, feats, output_data, input_mean, input_std, feats_mean, feats_std,
-                                       output_mean, output_std, user_indices=np.arange(input_data.shape[0]), add_noise=False, snr=None)
+            new_input_data = construction(new_input_data)
+            new_output_data = construction(new_output_data)
+            new_feats = new_locations[:,feats_to_include]
+            if feats_dim==0:
+                new_feats = None
+            # prediction on data
+            test_dataset = DeepMIMODataset(new_input_data, new_feats, new_output_data, input_mean, input_std, feats_mean, feats_std,
+                                        output_mean, output_std, user_indices=np.arange(new_input_data.shape[0]), add_noise=False, snr=None)
+        else:
+            test_dataset = DeepMIMODataset(input_data, feats, output_data, input_mean, input_std, feats_mean, feats_std,
+                                        output_mean, output_std, user_indices=np.arange(input_data.shape[0]), add_noise=False, snr=None)
+
         test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
         # will use the loaded model
         test_preds = np.zeros((len(test_dataset), output_dim))

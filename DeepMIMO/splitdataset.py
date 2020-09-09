@@ -7,9 +7,9 @@ seed = 342
 np.random.seed(seed)
 
 # load the 128 ant dataset
-uplink = loadmat("DeepMIMO Dataset/deepmimo_dataset_I1_2p4_128_xant_1_ofdm_5_paths.mat")['channelgains']
-downlink = loadmat("DeepMIMO Dataset/deepmimo_dataset_I1_2p5_128_xant_1_ofdm_5_paths.mat")['channelgains']
-locations = loadmat("DeepMIMO Dataset/locations.mat")['locations']
+uplink = loadmat("DeepMIMODataset/deepmimo_dataset_I1_2p4_128_xant_1_ofdm_5_paths.mat")['channelgains']
+downlink = loadmat("DeepMIMODataset/deepmimo_dataset_I1_2p5_128_xant_1_ofdm_5_paths.mat")['channelgains']
+locations = loadmat("DeepMIMODataset/locations.mat")['locations']
 
 # split the dataset in half
 row_indices = np.arange(uplink.shape[0])
@@ -33,33 +33,33 @@ print("Seond half shape",uplink_second_half.shape, downlink_second_half.shape, l
 # saving the files
 # first half
 savemat(
-        file_name="DeepMIMO Dataset/deepmimo_dataset_I1_2p4_128_xant_1_ofdm_5_paths_first_half.mat",
+        file_name="DeepMIMODataset/deepmimo_dataset_I1_2p4_128_xant_1_ofdm_5_paths_first_half.mat",
         mdict={'channelgains':uplink_first_half},
         appendmat=False
 )
 savemat(
-        file_name="DeepMIMO Dataset/deepmimo_dataset_I1_2p5_128_xant_1_ofdm_5_paths_first_half.mat",
+        file_name="DeepMIMODataset/deepmimo_dataset_I1_2p5_128_xant_1_ofdm_5_paths_first_half.mat",
         mdict={'channelgains':downlink_first_half},
         appendmat=False
 )
 savemat(
-        file_name="DeepMIMO Dataset/locations_first_half.mat",
+        file_name="DeepMIMODataset/locations_first_half.mat",
         mdict={'locations':locations_first_half},
         appendmat=False
 )
 # second half
 savemat(
-        file_name="DeepMIMO Dataset/deepmimo_dataset_I1_2p4_128_xant_1_ofdm_5_paths_second_half.mat",
+        file_name="DeepMIMODataset/deepmimo_dataset_I1_2p4_128_xant_1_ofdm_5_paths_second_half.mat",
         mdict={'channelgains':uplink_second_half},
         appendmat=False
 )
 savemat(
-        file_name="DeepMIMO Dataset/deepmimo_dataset_I1_2p5_128_xant_1_ofdm_5_paths_second_half.mat",
+        file_name="DeepMIMODataset/deepmimo_dataset_I1_2p5_128_xant_1_ofdm_5_paths_second_half.mat",
         mdict={'channelgains':downlink_second_half},
         appendmat=False
 )
 savemat(
-        file_name="DeepMIMO Dataset/locations_second_half.mat",
+        file_name="DeepMIMODataset/locations_second_half.mat",
         mdict={'locations':locations_second_half},
         appendmat=False
 )
