@@ -156,13 +156,13 @@ def set_params_autoencoder(params):
         params['blerber_save_path'] = "results/autoencoder/estimateddownlink_downlink_128_xant_{0}_seed_{1}_second_half.csv".format(method, seed)
         params['blerbercurve_save_path'] = "results/autoencoder/bler_ber_for_estimateddownlink_downlink_128_xant_seed_{1}_second_half.png".format(method, seed)
     elif params['scheme']==3:
-        params['input_path'] = "DeepMIMODataset/deepmimo_dataset_I1_estimated_2p5_with_feats_128_xant_1_ofdm_5_paths_second_half.mat"
-        params['downlink_path'] = "DeepMIMODataset/deepmimo_dataset_I1_2p5_128_xant_1_ofdm_5_paths_second_half.mat"
+        params['input_path'] = "DeepMIMODataset/deepmimo_dataset_I1_estimated_2p5_with_feats_128_xant_1_ofdm_5_paths_first_half.mat"
+        params['downlink_path'] = "DeepMIMODataset/deepmimo_dataset_I1_2p5_128_xant_1_ofdm_5_paths_first_half.mat"
 
-        params['model_save_path'] = "models/autoencoder_estimateddownlink+feats_downlink_128_xant_{0}_seed_{1}_second_half.bin".format(method, seed)
-        params['loss_save_path'] = "results/autoencoder/train_val_loss_for_estimateddownlink+feats_downlink_128_xant_{0}_seed_{1}_second_half.png".format(method, seed)
-        params['blerber_save_path'] = "results/autoencoder/estimateddownlink+feats_downlink_128_xant_{0}_seed_{1}_second_half.csv".format(method, seed)
-        params['blerbercurve_save_path'] = "results/autoencoder/bler_ber_for_estimateddownlink+feats_downlink_128_xant_{0}_seed_{1}_second_half.png".format(method, seed)
+        params['model_save_path'] = "models/autoencoder_estimateddownlink+feats_downlink_128_xant_{0}_seed_{1}_first_half.bin".format(method, seed)
+        params['loss_save_path'] = "results/autoencoder/train_val_loss_for_estimateddownlink+feats_downlink_128_xant_{0}_seed_{1}_first_half.png".format(method, seed)
+        params['blerber_save_path'] = "results/autoencoder/estimateddownlink+feats_downlink_128_xant_{0}_seed_{1}_first_half.csv".format(method, seed)
+        params['blerbercurve_save_path'] = "results/autoencoder/bler_ber_for_estimateddownlink+feats_downlink_128_xant_{0}_seed_{1}_first_half.png".format(method, seed)
     elif params['scheme']==4:
         params['input_path'] = "DeepMIMODataset/deepmimo_dataset_I1_2p4_128_xant_1_ofdm_5_paths_second_half.mat"
         params['downlink_path'] = "DeepMIMODataset/deepmimo_dataset_I1_2p5_128_xant_1_ofdm_5_paths_second_half.mat"

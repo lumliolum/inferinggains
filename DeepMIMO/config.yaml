@@ -16,11 +16,11 @@ fnn:
   model_save_path: "models/threehiddenlayer_first_half.bin"
   savefig: "results/deepmimo/channel_gains_and_distance_and_usercoordinates_128_xant_first_half.png"
   predict_for_autoencoder: True
-  use_new_data: True
-  autoencoder_save_path: "DeepMIMODataset/deepmimo_dataset_I1_estimated_2p5_with_feats_128_xant_1_ofdm_5_paths_second_half.mat"
+  use_new_data: False
+  autoencoder_save_path: "DeepMIMODataset/deepmimo_dataset_I1_estimated_2p5_with_feats_128_xant_1_ofdm_5_paths_first_half.mat"
 
 autoencoder:
-  scheme: 5
+  scheme: 3
   method: 'one_hot'
   feats_to_include: [1,2,4]
   k: 4
@@ -31,7 +31,7 @@ autoencoder:
   lr: 0.0001
   weight_decay: 0
   batch_size: 1024
-  epochs: 100
+  epochs: 50
   device: cpu
   seed: 42
   
