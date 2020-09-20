@@ -20,7 +20,7 @@ params.active_user_first=1;       % The first row of the considered receivers se
 params.active_user_last=502;        % The last row of the considered receivers section (check the scenario description for the receiver row map)
 
 % Number of BS Antenna 
-params.num_ant_x=128;                  % Number of the UPA antenna array on the x-axis 
+params.num_ant_x=16;                  % Number of the UPA antenna array on the x-axis 
 params.num_ant_y=1;                 % Number of the UPA antenna array on the y-axis 
 params.num_ant_z=1;                  % Number of the UPA antenna array on the z-axis
                                      % Note: The axes of the antennas match the axes of the ray-tracing scenario
@@ -63,6 +63,6 @@ for i=1:params.num_user
     fprintf([reverseStr, msg]);
     reverseStr = repmat(sprintf('\b'), 1, length(msg));
 end
-savepath = 'DeepMIMODataset/deepmimo_dataset_I1_2p5_128_xant_1_ofdm_5_paths.mat';
+savepath = sprintf('DeepMIMODataset/deepmimo_dataset_%s_%i_xant_%i_ofdm_%i_paths.mat', params.scenario, params.num_ant_x, params.num_OFDM, params.num_paths);
 fprintf("\n Saving at %s",savepath);
 save(savepath,'channelgains');

@@ -27,8 +27,8 @@ def main():
 
     scheme = params['scheme']
     method = params['method']
+    num_ant = params['num_ant']
     params = set_params_autoencoder(params)
-    fname = params['model_save_path']
     feats_to_include = params['feats_to_include']
     k = params['k']
     n = params['n']
@@ -60,8 +60,7 @@ def main():
     input_data = construction(input_data)
     downlink_data = construction(downlink_data)
     feats = locations[:, feats_to_include]
-    num_rows, num_ant = input_data.shape
-    num_ant = num_ant//2
+    num_rows, _ = input_data.shape
     _, feats_dim = feats.shape
     _, output_dim = downlink_data.shape
 
@@ -204,8 +203,8 @@ def main():
             round((t2-t1).total_seconds()), round(train_cross_entropy, 5),
             round(val_cross_entropy, 5)))
         if val_cross_entropy < best_cross_entropy:
-            print("val cross entropy decreases from {} to {}. Saving the model at {}".format(round(best_cross_entropy, 5), round(val_cross_entropy, 5), fname))
-            torch.save(model.state_dict(), fname)
+            print("val cross entropy decreases from {} to {}. Saving the model at {}".format(round(best_cross_entropy, 5), round(val_cross_entropy, 5), params['model_save_path']))
+            torch.save(model.state_dict(), params['model_save_path'])
             best_cross_entropy = val_cross_entropy
     
     print("The validation entropy is {}".format(round(best_cross_entropy, 5)))
@@ -216,7 +215,7 @@ def main():
                         input_dim=2*num_ant+feats_dim+M,
                         method=method,
                         device=device)
-    model.load_state_dict(torch.load(fname))
+    model.load_state_dict(torch.load(params['model_save_path']))
     model.eval()
     
     # testing(for various ranges of SNR)

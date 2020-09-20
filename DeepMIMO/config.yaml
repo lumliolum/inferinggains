@@ -22,6 +22,7 @@ fnn:
 autoencoder:
   scheme: 3
   method: 'one_hot'
+  num_ant: 128
   feats_to_include: [1,2,4]
   k: 4
   n: 4
