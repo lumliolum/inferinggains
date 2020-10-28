@@ -11,12 +11,12 @@ from scipy.io import loadmat
 import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader
 
-from models import AutoEncoder
+from models import AutoEncoder_v2
 from losses import CrossEntropyLoss
 from datasets import AutoEncoderDataset
 from utils import set_seed, construction, crossentropy, \
                   accuracy, read_yaml, EbNo2Sigma, one_hot, \
-                  bin_seq, set_params_autoencoder
+                  bin_seq, set_params_autoencoder, nmse
 
 
 def main():
@@ -26,7 +26,7 @@ def main():
     config = read_yaml(filename)
     params = config['autoencoder']
 
-    params['version'] = 1
+    params['version'] = 2
     scheme = params['scheme']
     method = params['method']
     num_ant = params['num_ant']
@@ -58,18 +58,18 @@ def main():
 
     set_seed(seed, device)
     input_data = loadmat(params['input_path'])['channelgains']
-    downlink_data = loadmat(params['downlink_path'])['channelgains']
+    downlink_channel = loadmat(params['downlink_path'])['channelgains']
     locations = loadmat(params['locations_path'])['locations']
     # reshaping the array as (m,*)
     input_data = input_data.reshape((input_data.shape[0], -1))
-    downlink_data = downlink_data.reshape((downlink_data.shape[0], -1))
+    downlink_channel = downlink_channel.reshape((downlink_channel.shape[0], -1))
 
     input_data = construction(input_data)
-    downlink_data = construction(downlink_data)
+    downlink_channel = construction(downlink_channel)
     feats = locations[:, feats_to_include]
     num_rows, _ = input_data.shape
     _, feats_dim = feats.shape
-    _, output_dim = downlink_data.shape
+    _, output_dim = downlink_channel.shape
 
     row_indices = np.arange(num_rows)
     # shuffling the indices
@@ -94,8 +94,9 @@ def main():
         feats_std = np.std(feats[train_row_indices, :], axis=0)
     else:
         feats, feats_mean, feats_std = None, None, None
-    downlink_mean = np.mean(downlink_data[train_row_indices, :], axis=0)
-    downlink_std = np.std(downlink_data[train_row_indices, :], axis=0)
+
+    downlink_mean = np.mean(downlink_channel[train_row_indices, :], axis=0)
+    downlink_std = np.std(downlink_channel[train_row_indices, :], axis=0)
 
     # generating message vectors for test data.
     test_message_matrix = np.random.randint(low=0, high=2**k,
@@ -105,32 +106,32 @@ def main():
     elif method=='bin_seq':
         test_message_matrix = bin_seq(test_message_matrix, d=M)
 
-    train_dataset = AutoEncoderDataset(input_data, feats, downlink_data, k, M,
+    train_dataset = AutoEncoderDataset(input_data, feats, downlink_channel, k, M,
                                        input_mean, input_std, feats_mean,
                                        feats_std, downlink_mean, downlink_std, method=method,
                                        indices=train_row_indices, generate_messages=True)
 
-    val_dataset = AutoEncoderDataset(input_data, feats, downlink_data, k, M,
+    val_dataset = AutoEncoderDataset(input_data, feats, downlink_channel, k, M,
                                      input_mean, input_std, feats_mean,
                                      feats_std, downlink_mean, downlink_std, method=method,
                                      indices=val_row_indices, generate_messages=True)
 
-    test_dataset = AutoEncoderDataset(input_data, feats, downlink_data, k, M,
+    test_dataset = AutoEncoderDataset(input_data, feats, downlink_channel, k, M,
                                       input_mean, input_std, feats_mean,
                                       feats_std, downlink_mean, downlink_std, method=method,
                                       indices=test_row_indices, generate_messages=False,
                                       message_matrix=test_message_matrix)
 
-
-    print("input dim = {0}, message length = {1}, number of channel uses = {2}".format(2*num_ant+feats_dim+M,M,n))
+    print("channel_dim = {0}, feats_dim = {1}, message length = {2}, number of channel uses = {3}".format(2*num_ant, feats_dim, M, n))
     print("learning rate = {0}, batch size = {1}, epochs = {2}".format(lr, batch_size, epochs))
     # model initialization
-    model = AutoEncoder(M=M,
-                        n=n,
-                        num_ant=num_ant,
-                        input_dim=2*num_ant+feats_dim+M,
-                        method=method,
-                        device=device)
+    model = AutoEncoder_v2(M=M,
+                           n=n,
+                           num_ant=num_ant,
+                           feats_dim=feats_dim,
+                           method=method,
+                           scheme=scheme,
+                           device=device)
     model.float()
     model.to(device)
 
@@ -152,6 +153,7 @@ def main():
     optimizer.zero_grad()
     train_loss = []
     val_loss = []
+    val_error = []
     best_cross_entropy = +np.inf
     for epoch in range(epochs):
         print("Epoch {}/{}".format(epoch+1, epochs))
@@ -164,17 +166,21 @@ def main():
         index = 0
         model.train()
         for batch, inputs in enumerate(train_loader):
-            input_data = inputs['input'].float().to(device)
-            downlink_data = inputs['downlink'].float().to(device)
+            channel = inputs['channel'].float().to(device)
+            channel_only = inputs['channel_only'].float().to(device)
             m = inputs['message'].float().to(device)
-            m_hat = model.forward(input_data, downlink_data, noise_std)
+            downlink_data = inputs['downlink'].float().to(device)
+
+            _, m_hat = model.forward(channel, m, downlink_data, noise_std, channel_only)
             loss = loss_fn.forward(m, m_hat)
             loss.backward()
             optimizer.step()
             optimizer.zero_grad()
-            train_preds[index:index+input_data.shape[0], :] = m_hat.cpu().detach().squeeze().numpy()
-            train_targets[index:index+input_data.shape[0], :] = m.cpu().detach().squeeze().numpy()
-            index = index + input_data.shape[0]
+
+            train_preds[index:index+channel.shape[0], :] = m_hat.cpu().detach().squeeze().numpy()
+            train_targets[index:index+channel.shape[0], :] = m.cpu().detach().squeeze().numpy()
+
+            index = index + channel.shape[0]
             logger = str(index)+'/'+str(len(train_dataset))
             if batch == len(train_loader)-1:
                 print(logger)
@@ -182,19 +188,25 @@ def main():
                 print(logger, end='\r')
         
         # validation
+        val_channel_preds = np.zeros((val_num_rows, 2*params['num_ant']))
         val_preds = np.zeros((val_num_rows, M))
         val_targets = np.zeros((val_num_rows, M))
         index = 0
         with torch.no_grad():
             model.eval()
             for batch, inputs in enumerate(val_loader):
-                input_data = inputs['input'].float().to(device)
-                downlink_data = inputs['downlink'].float().to(device)
+                channel = inputs['channel'].float().to(device)
                 m = inputs['message'].float().to(device)
-                m_hat = model.forward(input_data, downlink_data, noise_std)
-                val_preds[index:index+input_data.shape[0], :] = m_hat.cpu().detach().squeeze().numpy()
-                val_targets[index:index+input_data.shape[0], :] = m.cpu().detach().squeeze().numpy()
-                index = index + input_data.shape[0]
+                channel_only = inputs['channel_only'].float().to(device)
+                downlink_data = inputs['downlink'].float().to(device)
+
+                hhat, m_hat = model.forward(channel, m, downlink_data, noise_std, channel_only)
+
+                val_channel_preds[index:index+channel.shape[0], :] = hhat.cpu().detach().squeeze().numpy()
+                val_preds[index:index+channel.shape[0], :] = m_hat.cpu().detach().squeeze().numpy()
+                val_targets[index:index+channel.shape[0], :] = m.cpu().detach().squeeze().numpy()
+
+                index = index + channel.shape[0]
                 logger = str(index)+'/'+str(len(val_dataset))
                 if batch == len(val_loader)-1:
                     print(logger)
@@ -202,8 +214,12 @@ def main():
                     print(logger, end='\r')
         train_cross_entropy = crossentropy(train_targets, train_preds)
         val_cross_entropy = crossentropy(val_targets, val_preds)
+        val_nmse = nmse(downlink_channel[val_row_indices], downlink_std*val_channel_preds + downlink_mean)
+
         train_loss.append(train_cross_entropy)
         val_loss.append(val_cross_entropy)
+        val_error.append(val_nmse)
+
         t2 = datetime.datetime.now()
         print("Seconds = {} train loss = {} val loss = {}".format(
             round((t2-t1).total_seconds()), round(train_cross_entropy, 5),
@@ -212,24 +228,28 @@ def main():
             print("val cross entropy decreases from {} to {}. Saving the model at {}".format(round(best_cross_entropy, 5), round(val_cross_entropy, 5), params['model_save_path']))
             torch.save(model.state_dict(), params['model_save_path'])
             best_cross_entropy = val_cross_entropy
-    
+            best_nmse = val_nmse
+
     print("The validation entropy is {}".format(round(best_cross_entropy, 5)))
+    print("The validataion nmse is {}".format(round(best_nmse, 5)))
     # loading the model
-    model = AutoEncoder(M=M,
-                        n=n,
-                        num_ant=num_ant,
-                        input_dim=2*num_ant+feats_dim+M,
-                        method=method,
-                        device=device)
+    model = AutoEncoder_v2(M=M,
+                           n=n,
+                           num_ant=num_ant,
+                           feats_dim=feats_dim,
+                           method=method,
+                           scheme=scheme,
+                           device=device)
     model.load_state_dict(torch.load(params['model_save_path']))
     model.eval()
-    
+
     # testing(for various ranges of SNR)
     lb,ub = params['testing_ebnodb'][0],params['testing_ebnodb'][1]
     snr_range = np.linspace(lb,ub,ub-lb+1)
     bler = np.zeros((len(snr_range),))
     ber = np.zeros((len(snr_range),))
     lossvalues = np.zeros((len(snr_range),))
+
     for i in tqdm.tqdm(range(len(snr_range))):
         noise_std = EbNo2Sigma(snr_range[i], k, n)
         test_preds = np.zeros((test_num_rows, M))
@@ -237,13 +257,16 @@ def main():
         index = 0
         with torch.no_grad():
             for batch, inputs in enumerate(test_loader):
-                input_data = inputs['input'].float().to(device)
-                downlink_data = inputs['downlink'].float().to(device)
+                channel = inputs['channel'].float().to(device)
+                channel_only = inputs['channel_only'].float().to(device)
                 m = inputs['message'].float().to(device)
-                m_hat = model.forward(input_data, downlink_data, noise_std)
-                test_preds[index:index+input_data.shape[0]] = m_hat.cpu().detach().squeeze().numpy()
-                test_targets[index:index+input_data.shape[0]] = m.cpu().detach().squeeze().numpy()
-                index = index + input_data.shape[0]
+                downlink_data = inputs['downlink'].float().to(device)
+
+                _, m_hat = model.forward(channel, m, downlink_data, noise_std, channel_only)
+
+                test_preds[index:index+channel.shape[0]] = m_hat.cpu().detach().squeeze().numpy()
+                test_targets[index:index+channel.shape[0]] = m.cpu().detach().squeeze().numpy()
+                index = index + channel.shape[0]
         lossvalues[i] = crossentropy(test_targets, test_preds)
         if method=='one_hot':
             # converting to one hot vector
@@ -273,13 +296,16 @@ def main():
     with torch.no_grad():
         model.eval()
         for batch,inputs in enumerate(test_loader):
-            input_data = inputs['input'].float().to(device)
-            downlink_data = inputs['downlink'].float().to(device)
+            channel = inputs['channel'].float().to(device)
+            channel_only = inputs['channel_only'].float().to(device)
             m = inputs['message'].float().to(device)
-            m_hat = model.forward(input_data, downlink_data, noise_std)
-            test_preds[index:index+input_data.shape[0]] = m_hat.cpu().detach().squeeze().numpy()
-            test_targets[index:index+input_data.shape[0]] = m.cpu().detach().squeeze().numpy()
-            index = index + input_data.shape[0]
+            downlink_data = inputs['downlink'].float().to(device)
+
+            _, m_hat = model.forward(channel, m, downlink_data, noise_std, channel_only)
+
+            test_preds[index:index+channel.shape[0]] = m_hat.cpu().detach().squeeze().numpy()
+            test_targets[index:index+channel.shape[0]] = m.cpu().detach().squeeze().numpy()
+            index = index + channel.shape[0]
             logger = str(index)+'/'+str(len(test_dataset))
             print(logger, end='\r')
 
@@ -308,6 +334,7 @@ def main():
     loss['epoch'] = np.arange(1, params['epochs']+1)
     loss['train_cross_entropy'] = train_loss
     loss['val_cross_entropy'] = val_loss
+    loss['val_nmse'] = val_error
     path = os.path.join(params['results_dir'], params['loss_file_name'])
     loss.to_csv(path, index=False)
     print(loss.head())

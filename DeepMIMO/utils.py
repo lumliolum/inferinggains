@@ -139,47 +139,49 @@ def set_params_autoencoder(params):
     method = params['method']
     seed = params['seed']
     num_ant = params['num_ant']
-    params['locations_path'] = "DeepMIMODataset/locations_second_half.mat"
+    version = params['version']
+    k, n = params['k'], params['n']
+
+    # common to all schemes
+    params['locations_path'] = "DeepMIMODataset/locations.mat"
+    params['loss_file_name'] = "train_val_loss.csv"
+    params['blerber_file_name'] = "bler_ber.csv"
+
     if params['scheme']==1:
-        params['input_path'] = "DeepMIMODataset/deepmimo_dataset_I1_2p5_{0}_xant_1_ofdm_5_paths_second_half.mat".format(num_ant)
-        params['downlink_path'] = "DeepMIMODataset/deepmimo_dataset_I1_2p5_{0}_xant_1_ofdm_5_paths_second_half.mat".format(num_ant)
-        
-        params['model_save_path'] = "models/autoencoder_downlink_downlink_{0}_xant_{1}_seed_{2}_second_half.bin".format(num_ant, method, seed)
-        params['loss_save_path'] = "results/autoencoder/train_val_loss_for_downlink_downlink_{0}_xant_{1}_seed_{2}_second_half.png".format(num_ant, method, seed)
-        params['blerber_save_path'] = "results/autoencoder/downlink_downlink_{0}_xant_{1}_seed_{2}_second_half.csv".format(num_ant, method, seed)
-        params['blerbercurve_save_path'] = "results/autoencoder/bler_ber_for_downlink_downlink_{0}_xant_{1}_seed_{2}_second_half.png".format(num_ant, method, seed)
+        params['input_path'] = "DeepMIMODataset/deepmimo_dataset_I1_2p5_{0}_xant_1_ofdm_5_paths.mat".format(num_ant)
+        params['downlink_path'] = "DeepMIMODataset/deepmimo_dataset_I1_2p5_{0}_xant_1_ofdm_5_paths.mat".format(num_ant)
+
+        params['model_save_path'] = "models/autoencoder_downlink_downlink_{0}_xant_{1}_seed_{2}_version_{3}_k_{4}_n_{5}.bin".format(num_ant, method, seed, version, k, n)
+        params['results_dir'] = "results/autoencoder/downlink_downlink_{0}_xant_{1}_seed_{2}_version_{3}_k_{4}_n_{5}".format(num_ant, method, seed, version, k, n)
+
     elif params['scheme']==2:
-        params['input_path'] = "DeepMIMODataset/deepmimo_dataset_I1_estimated_2p5_{0}_xant_1_ofdm_5_paths_second_half.mat".format(num_ant)
-        params['downlink_path'] = "DeepMIMODataset/deepmimo_dataset_I1_2p5_{0}_xant_1_ofdm_5_paths_second_half.mat".format(num_ant)
-        
-        params['model_save_path'] = "models/autoencoder_estimateddownlink_downlink_{0}_xant_{1}_seed_{2}_second_half.bin".format(num_ant, method, seed)
-        params['loss_save_path'] = "results/autoencoder/train_val_loss_for_estimateddownlink_downlink_{0}_xant_{1}_seed_{2}_second_half.png".format(num_ant, method, seed)
-        params['blerber_save_path'] = "results/autoencoder/estimateddownlink_downlink_{0}_xant_{1}_seed_{2}_second_half.csv".format(num_ant, method, seed)
-        params['blerbercurve_save_path'] = "results/autoencoder/bler_ber_for_estimateddownlink_downlink_{0}_xant_{1}_seed_{2}_second_half.png".format(num_ant, method, seed)
+        params['input_path'] = "DeepMIMODataset/deepmimo_dataset_I1_estimated_2p5_{0}_xant_1_ofdm_5_paths.mat".format(num_ant)
+        params['downlink_path'] = "DeepMIMODataset/deepmimo_dataset_I1_2p5_{0}_xant_1_ofdm_5_paths.mat".format(num_ant)
+
+        params['model_save_path'] = "models/autoencoder_estimateddownlink_downlink_{0}_xant_{1}_seed_{2}_version_{3}_k_{4}_n_{5}.bin".format(num_ant, method, seed, version, k, n)
+        params['results_dir'] = "results/autoencoder/estimateddownlink_downlink_{0}_xant_{1}_seed_{2}_version_{3}_k_{4}_n_{5}".format(num_ant, method, seed, version, k, n)
+
     elif params['scheme']==3:
-        params['input_path'] = "DeepMIMODataset/deepmimo_dataset_I1_estimated_2p5_with_feats_{0}_xant_1_ofdm_5_paths_first_half.mat".format(num_ant)
-        params['downlink_path'] = "DeepMIMODataset/deepmimo_dataset_I1_2p5_{0}_xant_1_ofdm_5_paths_first_half.mat".format(num_ant)
+        params['input_path'] = "DeepMIMODataset/deepmimo_dataset_I1_estimated_2p5_with_feats_{0}_xant_1_ofdm_5_paths.mat".format(num_ant)
+        params['downlink_path'] = "DeepMIMODataset/deepmimo_dataset_I1_2p5_{0}_xant_1_ofdm_5_paths.mat".format(num_ant)
 
-        params['model_save_path'] = "models/autoencoder_estimateddownlink+feats_downlink_{0}_xant_{1}_seed_{2}_first_half.bin".format(num_ant, method, seed)
-        params['loss_save_path'] = "results/autoencoder/train_val_loss_for_estimateddownlink+feats_downlink_{0}_xant_{1}_seed_{2}_first_half.png".format(num_ant, method, seed)
-        params['blerber_save_path'] = "results/autoencoder/estimateddownlink+feats_downlink_{0}_xant_{1}_seed_{2}_first_half.csv".format(num_ant, method, seed)
-        params['blerbercurve_save_path'] = "results/autoencoder/bler_ber_for_estimateddownlink+feats_downlink_{0}_xant_{1}_seed_{2}_first_half.png".format(num_ant, method, seed)
+        params['model_save_path'] = "models/autoencoder_estimateddownlink+feats_downlink_{0}_xant_{1}_seed_{2}_version_{3}_k_{4}_n_{5}.bin".format(num_ant, method, seed, version, k, n)
+        params['results_dir'] = "results/autoencoder/estimateddownlink+feats_downlink_{0}_xant_{1}_seed_{2}_version_{3}_k_{4}_n_{5}".format(num_ant, method, seed, version, k, n)
+
     elif params['scheme']==4:
-        params['input_path'] = "DeepMIMODataset/deepmimo_dataset_I1_2p4_{0}_xant_1_ofdm_5_paths_second_half.mat".format(num_ant)
-        params['downlink_path'] = "DeepMIMODataset/deepmimo_dataset_I1_2p5_{0}_xant_1_ofdm_5_paths_second_half.mat".format(num_ant)
+        params['input_path'] = "DeepMIMODataset/deepmimo_dataset_I1_2p4_{0}_xant_1_ofdm_5_paths.mat".format(num_ant)
+        params['downlink_path'] = "DeepMIMODataset/deepmimo_dataset_I1_2p5_{0}_xant_1_ofdm_5_paths.mat".format(num_ant)
 
-        params['model_save_path'] = "models/autoencoder_uplink_downlink_{0}_xant_{1}_seed_{2}_second_half.bin".format(num_ant, method, seed)
-        params['loss_save_path'] = "results/autoencoder/train_val_loss_for_uplink_downlink_{0}_xant_{1}_seed_{2}_second_half.png".format(num_ant, method, seed)
-        params['blerber_save_path'] = "results/autoencoder/uplink_downlink_{0}_xant_{1}_seed_{2}_second_half.csv".format(num_ant, method, seed)
-        params['blerbercurve_save_path'] = "results/autoencoder/bler_ber_for_uplink_downlink_{0}_xant_{1}_seed_{2}_second_half.png".format(num_ant, method, seed)
+        params['model_save_path'] = "models/autoencoder_uplink_downlink_{0}_xant_{1}_seed_{2}_version_{3}_k_{4}_n_{5}.bin".format(num_ant, method, seed, version, k, n)
+        params['results_dir'] = "results/autoencoder/uplink_downlink_{0}_xant_{1}_seed_{2}_version_{3}_k_{4}_n_{5}".format(num_ant, method, seed, version, k, n)
+
     elif params['scheme']==5:
-        params['input_path'] = "DeepMIMODataset/deepmimo_dataset_I1_2p4_{0}_xant_1_ofdm_5_paths_second_half.mat".format(num_ant)
-        params['downlink_path'] = "DeepMIMODataset/deepmimo_dataset_I1_2p5_{0}_xant_1_ofdm_5_paths_second_half.mat".format(num_ant)
+        params['input_path'] = "DeepMIMODataset/deepmimo_dataset_I1_2p4_{0}_xant_1_ofdm_5_paths.mat".format(num_ant)
+        params['downlink_path'] = "DeepMIMODataset/deepmimo_dataset_I1_2p5_{0}_xant_1_ofdm_5_paths.mat".format(num_ant)
 
-        params['model_save_path'] = "models/autoencoder_uplink+feats_downlink_{0}_xant_{1}_seed_{2}_second_half.bin".format(num_ant, method, seed)
-        params['loss_save_path'] = "results/autoencoder/train_val_loss_for_uplink+feats_downlink_{0}_xant_{1}_seed_{2}_second_half.png".format(num_ant, method, seed)
-        params['blerber_save_path'] = "results/autoencoder/uplink+feats_downlink_{0}_xant_{1}_seed_{2}_second_half.csv".format(num_ant, method, seed)
-        params['blerbercurve_save_path'] = "results/autoencoder/bler_ber_for_uplink+feats_downlink_{0}_xant_{1}_seed_{2}_second_half.png".format(num_ant, method, seed)
+        params['model_save_path'] = "models/autoencoder_uplink+feats_downlink_{0}_xant_{1}_seed_{2}_version_{3}_k_{4}_n_{5}.bin".format(num_ant, method, seed, version, k, n)
+        params['results_dir'] = "results/autoencoder/uplink+feats_downlink_{0}_xant_{1}_seed_{2}_version_{3}_k_{4}_n_{5}".format(num_ant, method, seed, version, k, n)
+    
     else:
         raise Exception("Scheme {} is not available".format(params['scheme']))
 
