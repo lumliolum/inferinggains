@@ -27,6 +27,7 @@ def main():
     params = config['autoencoder']
 
     params['version'] = 1
+    params['mode'] = 'normal'
     scheme = params['scheme']
     method = params['method']
     num_ant = params['num_ant']

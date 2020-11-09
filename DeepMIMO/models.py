@@ -104,7 +104,7 @@ class AutoEncoder(nn.Module):
         return h_decoder
 
 class AutoEncoder_v2(nn.Module):
-    def __init__(self, M, n, num_ant, feats_dim, method, scheme, device=torch.device('cpu')):
+    def __init__(self, M, n, num_ant, feats_dim, method, scheme, mode, device=torch.device('cpu')):
         """
             .....
         """
@@ -115,12 +115,13 @@ class AutoEncoder_v2(nn.Module):
         self.feats_dim = feats_dim
         self.method = method
         self.scheme = scheme
+        self.mode = mode
         self.device = device
 
         # selected schemes for pred network
-        self.sel_schemes = [4,5]
+        self.selected_schemes = [1,4,5]
 
-        if self.scheme in self.sel_schemes:
+        if self.scheme in self.selected_schemes:
             # prediction network
             self.prednetwork = nn.Sequential(
                                                 nn.Linear(2*self.num_ant+self.feats_dim, 2*self.num_ant),
@@ -138,6 +139,9 @@ class AutoEncoder_v2(nn.Module):
                                                 nn.Linear(self.M//2, 2*self.n),
                                             )
 
+        if self.mode == 'concat':
+            # 2 is for x
+            self.concatlayer = nn.Linear(in_features=2*num_ant+2, out_features=2*num_ant)
         # decoder network
         self.decodernetwork = nn.Sequential(
                                                 nn.Linear(2*self.n, self.M),
@@ -145,25 +149,29 @@ class AutoEncoder_v2(nn.Module):
                                                 nn.Linear(self.M, self.M),
                                                 nn.Softmax(dim=1),
                                             )
-    
+
     def forward(self, channel, message, downlink_data, noise_std, hhat):
         """
             channel : channel vector + feats(optional)
             message : one hot message vector
             downlink: downlink_data
         """
-        if self.scheme in self.sel_schemes:
+        if self.scheme in self.selected_schemes:
             hhat = self.prednetwork(channel)
-        else:
-            hhat = hhat
 
         x = self.encodernetwork(message)
         for i in range(self.n):
             _,size = hhat.shape
             x_i = x[:,2*i:2*(i+1)]
-            sr = hhat[:,:size//2]*x_i[:,[0]] - hhat[:,size//2:]*x_i[:,[1]]
-            si = hhat[:,:size//2]*x_i[:,[1]] + hhat[:,size//2:]*x_i[:,[0]]
-            s = torch.cat([sr,si], -1)
+            if self.mode == 'dot':
+                sr = hhat[:,:size//2]*x_i[:,[0]] - hhat[:,size//2:]*x_i[:,[1]]
+                si = hhat[:,:size//2]*x_i[:,[1]] + hhat[:,size//2:]*x_i[:,[0]]
+                s = torch.cat([sr,si], -1)
+            elif self.mode == 'concat':
+                s = self.concatlayer(torch.cat((hhat, x_i), dim=-1))
+            else:
+                raise Exception("For Auto Encoder version 2 mode {} is not available".format(self.mode))
+
             if i==0:
                 h_encoder = s
             else:

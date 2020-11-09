@@ -28,6 +28,7 @@ def main():
 
     params['version'] = 2
     scheme = params['scheme']
+    mode = params['mode']
     method = params['method']
     num_ant = params['num_ant']
     params = set_params_autoencoder(params)
@@ -82,7 +83,7 @@ def main():
     val_row_indices = row_indices[train_num_rows:-test_num_rows]
     test_row_indices = row_indices[-test_num_rows:]
 
-    print("scheme = {0}, method = {1}".format(scheme, method))
+    print("scheme = {0}, method = {1}, mode={2}".format(scheme, method, mode))
     print("train size = {} val size = {} test size = {}".format(train_num_rows, val_num_rows, test_num_rows))
 
     # calculating mean and std over training set
@@ -131,6 +132,7 @@ def main():
                            feats_dim=feats_dim,
                            method=method,
                            scheme=scheme,
+                           mode=mode,
                            device=device)
     model.float()
     model.to(device)
@@ -239,6 +241,7 @@ def main():
                            feats_dim=feats_dim,
                            method=method,
                            scheme=scheme,
+                           mode=mode,
                            device=device)
     model.load_state_dict(torch.load(params['model_save_path']))
     model.eval()

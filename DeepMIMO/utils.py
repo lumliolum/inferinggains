@@ -137,6 +137,7 @@ def set_seed(seed, device):
 
 def set_params_autoencoder(params):
     method = params['method']
+    mode = params['mode']
     seed = params['seed']
     num_ant = params['num_ant']
     version = params['version']
@@ -151,36 +152,36 @@ def set_params_autoencoder(params):
         params['input_path'] = "DeepMIMODataset/deepmimo_dataset_I1_2p5_{0}_xant_1_ofdm_5_paths.mat".format(num_ant)
         params['downlink_path'] = "DeepMIMODataset/deepmimo_dataset_I1_2p5_{0}_xant_1_ofdm_5_paths.mat".format(num_ant)
 
-        params['model_save_path'] = "models/autoencoder_downlink_downlink_{0}_xant_{1}_seed_{2}_version_{3}_k_{4}_n_{5}.bin".format(num_ant, method, seed, version, k, n)
-        params['results_dir'] = "results/autoencoder/downlink_downlink_{0}_xant_{1}_seed_{2}_version_{3}_k_{4}_n_{5}".format(num_ant, method, seed, version, k, n)
+        params['model_save_path'] = "models/autoencoder_downlink_downlink_{0}_xant_{1}_seed_{2}_version_{3}_mode_{4}_k_{5}_n_{6}.bin".format(num_ant, method, seed, version, mode, k, n)
+        params['results_dir'] = "results/autoencoder/downlink_downlink_{0}_xant_{1}_seed_{2}_version_{3}_mode_{4}_k_{5}_n_{6}".format(num_ant, method, seed, version, mode, k, n)
 
     elif params['scheme']==2:
         params['input_path'] = "DeepMIMODataset/deepmimo_dataset_I1_estimated_2p5_{0}_xant_1_ofdm_5_paths.mat".format(num_ant)
         params['downlink_path'] = "DeepMIMODataset/deepmimo_dataset_I1_2p5_{0}_xant_1_ofdm_5_paths.mat".format(num_ant)
 
-        params['model_save_path'] = "models/autoencoder_estimateddownlink_downlink_{0}_xant_{1}_seed_{2}_version_{3}_k_{4}_n_{5}.bin".format(num_ant, method, seed, version, k, n)
-        params['results_dir'] = "results/autoencoder/estimateddownlink_downlink_{0}_xant_{1}_seed_{2}_version_{3}_k_{4}_n_{5}".format(num_ant, method, seed, version, k, n)
+        params['model_save_path'] = "models/autoencoder_estimateddownlink_downlink_{0}_xant_{1}_seed_{2}_version_{3}_mode_{4}_k_{5}_n_{6}.bin".format(num_ant, method, seed, version, mode, k, n)
+        params['results_dir'] = "results/autoencoder/estimateddownlink_downlink_{0}_xant_{1}_seed_{2}_version_{3}_mode_{4}_k_{5}_n_{6}".format(num_ant, method, seed, version, mode, k, n)
 
     elif params['scheme']==3:
         params['input_path'] = "DeepMIMODataset/deepmimo_dataset_I1_estimated_2p5_with_feats_{0}_xant_1_ofdm_5_paths.mat".format(num_ant)
         params['downlink_path'] = "DeepMIMODataset/deepmimo_dataset_I1_2p5_{0}_xant_1_ofdm_5_paths.mat".format(num_ant)
 
-        params['model_save_path'] = "models/autoencoder_estimateddownlink+feats_downlink_{0}_xant_{1}_seed_{2}_version_{3}_k_{4}_n_{5}.bin".format(num_ant, method, seed, version, k, n)
-        params['results_dir'] = "results/autoencoder/estimateddownlink+feats_downlink_{0}_xant_{1}_seed_{2}_version_{3}_k_{4}_n_{5}".format(num_ant, method, seed, version, k, n)
+        params['model_save_path'] = "models/autoencoder_estimateddownlink+feats_downlink_{0}_xant_{1}_seed_{2}_version_{3}_mode_{4}_k_{5}_n_{6}.bin".format(num_ant, method, seed, version, mode, k, n)
+        params['results_dir'] = "results/autoencoder/estimateddownlink+feats_downlink_{0}_xant_{1}_seed_{2}_version_{3}_mode_{4}_k_{5}_n_{6}".format(num_ant, method, seed, version, mode, k, n)
 
     elif params['scheme']==4:
         params['input_path'] = "DeepMIMODataset/deepmimo_dataset_I1_2p4_{0}_xant_1_ofdm_5_paths.mat".format(num_ant)
         params['downlink_path'] = "DeepMIMODataset/deepmimo_dataset_I1_2p5_{0}_xant_1_ofdm_5_paths.mat".format(num_ant)
 
-        params['model_save_path'] = "models/autoencoder_uplink_downlink_{0}_xant_{1}_seed_{2}_version_{3}_k_{4}_n_{5}.bin".format(num_ant, method, seed, version, k, n)
-        params['results_dir'] = "results/autoencoder/uplink_downlink_{0}_xant_{1}_seed_{2}_version_{3}_k_{4}_n_{5}".format(num_ant, method, seed, version, k, n)
+        params['model_save_path'] = "models/autoencoder_uplink_downlink_{0}_xant_{1}_seed_{2}_version_{3}_mode_{4}_k_{5}_n_{6}.bin".format(num_ant, method, seed, version, mode, k, n)
+        params['results_dir'] = "results/autoencoder/uplink_downlink_{0}_xant_{1}_seed_{2}_version_{3}_mode_{4}_k_{5}_n_{6}".format(num_ant, method, seed, version, mode, k, n)
 
     elif params['scheme']==5:
         params['input_path'] = "DeepMIMODataset/deepmimo_dataset_I1_2p4_{0}_xant_1_ofdm_5_paths.mat".format(num_ant)
         params['downlink_path'] = "DeepMIMODataset/deepmimo_dataset_I1_2p5_{0}_xant_1_ofdm_5_paths.mat".format(num_ant)
 
-        params['model_save_path'] = "models/autoencoder_uplink+feats_downlink_{0}_xant_{1}_seed_{2}_version_{3}_k_{4}_n_{5}.bin".format(num_ant, method, seed, version, k, n)
-        params['results_dir'] = "results/autoencoder/uplink+feats_downlink_{0}_xant_{1}_seed_{2}_version_{3}_k_{4}_n_{5}".format(num_ant, method, seed, version, k, n)
+        params['model_save_path'] = "models/autoencoder_uplink+feats_downlink_{0}_xant_{1}_seed_{2}_version_{3}_mode_{4}_k_{5}_n_{6}.bin".format(num_ant, method, seed, version, mode, k, n)
+        params['results_dir'] = "results/autoencoder/uplink+feats_downlink_{0}_xant_{1}_seed_{2}_version_{3}_mode_{4}_k_{5}_n_{6}".format(num_ant, method, seed, version, mode, k, n)
     
     else:
         raise Exception("Scheme {} is not available".format(params['scheme']))
