@@ -119,7 +119,7 @@ class AutoEncoder_v2(nn.Module):
         self.device = device
 
         # selected schemes for pred network
-        self.selected_schemes = [1,4,5]
+        self.selected_schemes = [4,5]
 
         if self.scheme in self.selected_schemes:
             # prediction network
@@ -132,12 +132,24 @@ class AutoEncoder_v2(nn.Module):
                                                 nn.ReLU(),
                                                 nn.Linear(4*self.num_ant, 2*self.num_ant),
                                                 )
+
         # encoder network
-        self.encodernetwork = nn.Sequential(
-                                                nn.Linear(self.M, self.M//2),
-                                                nn.ReLU(),
-                                                nn.Linear(self.M//2, 2*self.n),
-                                            )
+        if self.mode == 'hadamard':
+            if self.n != 1:
+                raise Exception("For mode hadamard, n = {} is not available".format(self.n))
+            self.encodernetwork = nn.Sequential(
+                                                    nn.Linear(self.M, self.M//2),
+                                                    nn.ReLU(),
+                                                    nn.Linear(self.M//2, 2*self.num_ant),
+                                                )
+        elif self.mode in ['dot', 'concat']:
+            self.encodernetwork = nn.Sequential(
+                                                    nn.Linear(self.M, self.M//2),
+                                                    nn.ReLU(),
+                                                    nn.Linear(self.M//2, 2*self.n),
+                                                )
+        else:
+            raise Exception("For Auto Encoder version 2, mode {} is not available".format(self.mode))
 
         if self.mode == 'concat':
             # 2 is for x
@@ -162,15 +174,19 @@ class AutoEncoder_v2(nn.Module):
         x = self.encodernetwork(message)
         for i in range(self.n):
             _,size = hhat.shape
-            x_i = x[:,2*i:2*(i+1)]
             if self.mode == 'dot':
+                x_i = x[:,2*i:2*(i+1)]
                 sr = hhat[:,:size//2]*x_i[:,[0]] - hhat[:,size//2:]*x_i[:,[1]]
                 si = hhat[:,:size//2]*x_i[:,[1]] + hhat[:,size//2:]*x_i[:,[0]]
                 s = torch.cat([sr,si], -1)
             elif self.mode == 'concat':
+                x_i = x[:,2*i:2*(i+1)]
                 s = self.concatlayer(torch.cat((hhat, x_i), dim=-1))
-            else:
-                raise Exception("For Auto Encoder version 2 mode {} is not available".format(self.mode))
+            elif self.mode == 'hadamard':
+                x_i = x[:,2*self.num_ant*i:2*self.num_ant*(i+1)]
+                sr = hhat[:,:size//2]*x_i[:,:size//2] - hhat[:,size//2:]*x_i[:,size//2:]
+                si = hhat[:,:size//2]*x_i[:,size//2:] + hhat[:,size//2:]*x_i[:,:size//2]
+                s = torch.cat([sr,si], -1)
 
             if i==0:
                 h_encoder = s

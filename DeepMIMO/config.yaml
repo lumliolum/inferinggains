@@ -20,8 +20,8 @@ fnn:
   autoencoder_save_path: "DeepMIMODataset/deepmimo_dataset_I1_estimated_2p5_with_feats_128_xant_1_ofdm_5_paths_first_half.mat"
 
 autoencoder:
-  scheme: 1
-  mode: 'concat'
+  scheme: 5
+  mode: 'hadamard'
   method: 'one_hot'
   num_ant: 16
   feats_to_include: [1,2,4]

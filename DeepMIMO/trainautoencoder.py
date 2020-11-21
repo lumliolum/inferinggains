@@ -154,6 +154,7 @@ def main():
     train_loss = []
     val_loss = []
     best_cross_entropy = +np.inf
+
     for epoch in range(epochs):
         print("Epoch {}/{}".format(epoch+1, epochs))
         t1 = datetime.datetime.now()
