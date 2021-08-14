@@ -1,6 +1,7 @@
 import yaml
 import torch
 import datetime
+import argparse
 import numpy as np
 import torch.nn as nn
 import torch.optim as optim
@@ -14,10 +15,9 @@ from losses import MSELoss, NMSELoss
 from utils import read_yaml, set_seed, construction, mse, nmse, bps, reconstruction
 
 
-def main():
+def main(filename):
     # params
     x = datetime.datetime.now()
-    filename = "config.yaml"
     config = read_yaml(filename)
     params = config['fnn']
     seed = params['seed']
@@ -258,4 +258,7 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-c", "--config", help="path to the config file.", required=True)
+    arguments = vars(parser.parse_args())
+    main(arguments["config"])
