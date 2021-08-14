@@ -286,7 +286,7 @@ def main():
             print(logger, end='\r')
 
     if method=='one_hot':
-        # converting to one hot vector
+        # converting to one hot vector(test_preds have probabilties)
         idx = np.argmax(test_preds, axis=1)
         test_preds = np.zeros(test_preds.shape)
         test_preds[np.arange(test_preds.shape[0]), idx] = 1
@@ -323,6 +323,9 @@ def main():
     path = os.path.join(params['results_dir'], params['blerber_file_name'])
     results.to_csv(path, index=False)
     print(results.head())
+
+    # saving the config used to the folder
+    yaml.dump(params, open(os.path.join(params['results_dir'], "config.yaml"), 'w'))
 
     y = datetime.datetime.now()
     print("Completed in {} seconds".format(round((y-x).total_seconds(), 5)))

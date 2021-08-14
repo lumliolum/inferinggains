@@ -80,9 +80,9 @@ class AutoEncoder(nn.Module):
             _,size = downlink_data.shape
 
             rxr = torch.sum(downlink_data[:, :size//2]*h[:, :size//2], dim=1)
-            rxi = torch.sum(downlink_data[:, size//2:]*h[:, size//2:], dim=1)
+            rxi = -torch.sum(downlink_data[:, size//2:]*h[:, size//2:], dim=1)
 
-            ryr = torch.sum(downlink_data[:, :size//2]*h[:, size//2:], dim=1)
+            ryr = -torch.sum(downlink_data[:, :size//2]*h[:, size//2:], dim=1)
             ryi = torch.sum(downlink_data[:, size//2:]*h[:, :size//2], dim=1)
 
             rx = rxr - rxi
@@ -199,9 +199,9 @@ class AutoEncoder_v2(nn.Module):
             h = h_encoder[:,2*self.num_ant*i:2*self.num_ant*(i+1)]
             _,size = h.shape
             rxr = torch.sum(downlink_data[:, :size//2]*h[:, :size//2], dim=1)
-            rxi = torch.sum(downlink_data[:, size//2:]*h[:, size//2:], dim=1)
+            rxi = -torch.sum(downlink_data[:, size//2:]*h[:, size//2:], dim=1)
 
-            ryr = torch.sum(downlink_data[:, :size//2]*h[:, size//2:], dim=1)
+            ryr = -torch.sum(downlink_data[:, :size//2]*h[:, size//2:], dim=1)
             ryi = torch.sum(downlink_data[:, size//2:]*h[:, :size//2], dim=1)
 
             rx = rxr - rxi

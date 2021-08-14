@@ -352,6 +352,10 @@ def main():
     results.to_csv(path, index=False)
     print(results.head())
 
+    # saving the config used to the folder
+    params['config_filename'] = "config.yaml"
+    yaml.dump(params, open(os.path.join(params['results_dir'], params['config_filename']), 'w'))
+
     y = datetime.datetime.now()
     print("Completed in {} seconds".format(round((y-x).total_seconds(), 5)))
 
