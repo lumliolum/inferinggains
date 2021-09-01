@@ -103,6 +103,7 @@ class AutoEncoder(nn.Module):
             h_decoder = self.sigmoid(self.decoder_layer2(h_decoder))
         return h_decoder
 
+
 class AutoEncoder_v2(nn.Module):
     def __init__(self, M, n, num_ant, feats_dim, method, scheme, mode, device=torch.device('cpu')):
         """
@@ -217,3 +218,41 @@ class AutoEncoder_v2(nn.Module):
 
         h_decoder = self.decodernetwork(h_decoder)
         return hhat, h_decoder
+
+
+class VAE(nn.Module):
+    def __init__(self, input_dim, output_dim):
+        super(VAE, self).__init__()
+        self.input_dim = input_dim
+        self.output_dim = output_dim
+
+        # encoder
+        self.encoder_layer1 = nn.Linear(in_features=self.input_dim, out_features=64)
+        self.encoder_layer2 = nn.Linear(in_features=64, out_features=10)
+
+        # decoder
+        # 10 includes both mean and std. after sampling we will get vectors of size 5.
+        self.decoder_layer1 = nn.Linear(in_features=5, out_features=64)
+        self.decoder_layer2 = nn.Linear(in_features=64, out_features=self.output_dim)
+
+        # relu
+        self.relu = nn.ReLU()
+    
+    def forward(self, X):
+        # encoding
+        e1 = self.relu(self.encoder_layer1(X))
+        e2 = self.encoder_layer2(e1)
+
+        # the first half will be mean and second half will be log_var
+        mean = e2[:, :5]
+        log_var = e2[:, 5:]
+        std = torch.sqrt(torch.exp(log_var))
+        # will draw samples from normal (0,1) which has same shape as std.
+        eps = torch.randn_like(std)
+        z = mean + eps*std
+
+        # decoding
+        d1 = self.relu(self.decoder_layer1(z))
+        d2 = self.decoder_layer2(d1)
+
+        return d2, mean, log_var

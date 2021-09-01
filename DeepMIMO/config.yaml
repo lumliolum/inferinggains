@@ -13,11 +13,28 @@ fnn:
   snr: 
   device: cpu
   seed: 42
-  model_save_path: "models/threehiddenlayer.bin"
+  model_save_path: "models/fnn/threehiddenlayer.bin"
   savefig: "results/test/channel_gains_64_ofdm.png"
   predict_for_autoencoder: False
   use_new_data: False
   autoencoder_save_path: "DeepMIMODataset/deepmimo_dataset_I1_estimated_2p5_with_feats_128_xant_1_ofdm_5_paths_first_half.mat"
+
+vae:
+  input_path: "DeepMIMODataset/deepmimo_dataset_I1_2p4_64_ofdm_5_paths.mat"
+  output_path: "DeepMIMODataset/deepmimo_dataset_I1_2p5_64_ofdm_5_paths.mat"
+  locations_path: "DeepMIMODataset/locations.mat"
+  train_val_test_split: [0.7,0.1,0.2]
+  feats_to_include: []
+  lr: 0.001
+  weight_decay: 0
+  batch_size: 1024
+  epochs: 100
+  add_noise: False
+  snr: 
+  device: cpu
+  seed: 42
+  model_save_path: "models/vae/threehiddenlayer.bin"
+  savefig: "results/vae/channel_gains_64_ofdm.png"
 
 autoencoder:
   scheme: 5
@@ -36,4 +53,3 @@ autoencoder:
   epochs: 100
   device: cpu
   seed: 42
-  

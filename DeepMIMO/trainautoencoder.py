@@ -11,10 +11,10 @@ from scipy.io import loadmat
 import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader
 
-from models import AutoEncoder
-from losses import CrossEntropyLoss
-from datasets import AutoEncoderDataset
-from utils import set_seed, construction, crossentropy, \
+from .models import AutoEncoder
+from .losses import CrossEntropyLoss
+from .datasets import AutoEncoderDataset
+from .utils import set_seed, construction, crossentropy, \
                   accuracy, read_yaml, EbNo2Sigma, one_hot, \
                   bin_seq, set_params_autoencoder
 

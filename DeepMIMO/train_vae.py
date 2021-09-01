@@ -10,9 +10,9 @@ from scipy.io import loadmat, savemat
 import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader
 
-from .models import FNN
+from .models import VAE
 from .datasets import DeepMIMODataset
-from .losses import MSELoss, NMSELoss
+from .losses import VAELoss
 from .utils import read_yaml, set_seed, construction, mse, nmse, bps, reconstruction
 
 
@@ -20,11 +20,10 @@ def main(filename):
     # params
     x = datetime.datetime.now()
     config = read_yaml(filename)
-    params = config['fnn']
+    params = config['vae']
 
     seed = params['seed']
     device = torch.device(params['device'])
-    hidden_dim = params['hidden_dim']
     feats_to_include = params['feats_to_include']
     fname = params['model_save_path']
     lr = params['lr']
@@ -44,6 +43,7 @@ def main(filename):
     input_data = loadmat(params['input_path'])['channelgains']
     output_data = loadmat(params['output_path'])['channelgains']
     locations = loadmat(params['locations_path'])['locations']
+
     # reshaping the array as (m,*)
     input_data = input_data.reshape((input_data.shape[0], -1))
     output_data = output_data.reshape((output_data.shape[0], -1))
@@ -81,15 +81,19 @@ def main(filename):
     # output_mean = 0
     # output_std = 1e-5
     train_dataset = DeepMIMODataset(input_data, feats, output_data, input_mean, input_std, feats_mean, feats_std,
-                                    output_mean, output_std, user_indices=train_row_indices, add_noise=add_noise, snr=snr)
+                                    output_mean, output_std, user_indices=train_row_indices, add_noise=add_noise,
+                                    snr=snr)
     val_dataset = DeepMIMODataset(input_data, feats, output_data, input_mean, input_std, feats_mean, feats_std,
-                                  output_mean, output_std, user_indices=val_row_indices, add_noise=add_noise, snr=snr)
+                                  output_mean, output_std, user_indices=val_row_indices, add_noise=add_noise,
+                                  snr=snr)
     test_dataset = DeepMIMODataset(input_data, feats, output_data, input_mean, input_std, feats_mean, feats_std,
-                                   output_mean, output_std, user_indices=test_row_indices, add_noise=add_noise, snr=snr)
+                                   output_mean, output_std, user_indices=test_row_indices, add_noise=add_noise,
+                                   snr=snr)
     # model initialization
-    print("input Dimension = {0}, hidden Dimension = {1}, output Dimension = {2}".format(input_dim+feats_dim, hidden_dim, output_dim))
+    print("input Dimension = {0}, output Dimension = {1}".format(input_dim+feats_dim, output_dim))
     print("learning rate = {0}, batch size = {1}, epochs = {2}".format(lr, batch_size, epochs))
-    model = FNN(input_dim+feats_dim, hidden_dim, output_dim)
+
+    model = VAE(input_dim + feats_dim, output_dim)
     model.float()
     model.to(device)
 
@@ -97,9 +101,10 @@ def main(filename):
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
-    loss_fn = MSELoss()
+    loss_fn = VAELoss()
     optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
     optimizer.zero_grad()
+
     train_loss = []
     val_loss = []
     train_metric = []
@@ -118,8 +123,8 @@ def main(filename):
         for batch, inputs in enumerate(train_loader):
             X = inputs['uplink'].float().to(device)
             y = inputs['downlink'].float().to(device)
-            y_pred = model.forward(X)
-            loss = loss_fn(y_pred, y)
+            y_pred, mean, log_var = model.forward(X)
+            loss = loss_fn(y_pred, y, mean, log_var)
             loss.backward()
             optimizer.step()
             optimizer.zero_grad()
@@ -131,6 +136,7 @@ def main(filename):
                 print(logger)
             else:
                 print(logger, end='\r')
+
         # validation
         val_preds = np.zeros((val_num_rows, output_dim))
         val_targets = np.zeros((val_num_rows, output_dim))
@@ -140,7 +146,7 @@ def main(filename):
             for batch, inputs in enumerate(val_loader):
                 X = inputs['uplink'].float().to(device)
                 y = inputs['downlink'].float().to(device)
-                y_pred = model.forward(X)
+                y_pred, mean, log_var = model.forward(X)
                 val_preds[index:index+X.shape[0], :] = y_pred.cpu().detach().squeeze().numpy()
                 val_targets[index:index+X.shape[0], :] = y.cpu().detach().squeeze().numpy()
                 index = index + X.shape[0]
@@ -149,6 +155,7 @@ def main(filename):
                     print(logger)
                 else:
                     print(logger, end='\r')
+
         train_mse = mse(train_targets, train_preds)
         val_mse = mse(val_targets, val_preds)
         train_nmse = nmse(train_targets, train_preds)
@@ -178,7 +185,7 @@ def main(filename):
     # evaluation on test data
     print("Evaluating on test data")
     # loading the saved model
-    model = FNN(input_dim+feats_dim, hidden_dim, output_dim)
+    model = VAE(input_dim + feats_dim, output_dim)
     model.load_state_dict(torch.load(fname))
     test_preds = np.zeros((test_num_rows, output_dim))
     test_targets = np.zeros((test_num_rows, output_dim))
@@ -188,7 +195,7 @@ def main(filename):
         for batch, inputs in enumerate(test_loader):
             X = inputs['uplink'].float().to(device)
             y = inputs['downlink'].float().to(device)
-            y_pred = model.forward(X)
+            y_pred, mean, log_var = model.forward(X)
             test_preds[index:index+X.shape[0], :] = y_pred.cpu().detach().squeeze().numpy()
             test_targets[index:index+X.shape[0], :] = y.cpu().detach().squeeze().numpy()
             index = index+X.shape[0]
@@ -197,73 +204,12 @@ def main(filename):
                 print(logger)
             else:
                 print(logger, end='\r')
+
     test_nmse = nmse(test_targets, test_preds)
     print("Test nmse = {}".format(test_nmse))
     # print("Compute BPS", bps(test_targets,  test_preds, mfactor=output_std))
 
-    predict_for_autoencoder = params['predict_for_autoencoder']
-    if predict_for_autoencoder:
-        print("For autoencoder")
-        if params['use_new_data']:
-            new_input_data = loadmat("DeepMIMODataset/deepmimo_dataset_I1_2p4_128_xant_1_ofdm_5_paths_second_half.mat")['channelgains']
-            new_output_data = loadmat("DeepMIMODataset/deepmimo_dataset_I1_2p5_128_xant_1_ofdm_5_paths_second_half.mat")['channelgains']
-            new_locations = loadmat("DeepMIMODataset/locations_second_half.mat")['locations']
-
-            # reshaping
-            new_input_data = new_input_data.reshape((new_input_data.shape[0], -1))
-            new_output_data = new_output_data.reshape((new_output_data.shape[0], -1))
-
-            new_input_data = construction(new_input_data)
-            new_output_data = construction(new_output_data)
-            new_feats = new_locations[:,feats_to_include]
-            if feats_dim==0:
-                new_feats = None
-            # prediction on data
-            test_dataset = DeepMIMODataset(new_input_data, new_feats, new_output_data, input_mean, input_std, feats_mean, feats_std,
-                                        output_mean, output_std, user_indices=np.arange(new_input_data.shape[0]), add_noise=False, snr=None)
-        else:
-            test_dataset = DeepMIMODataset(input_data, feats, output_data, input_mean, input_std, feats_mean, feats_std,
-                                        output_mean, output_std, user_indices=np.arange(input_data.shape[0]), add_noise=False, snr=None)
-
-        test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
-        # will use the loaded model
-        test_preds = np.zeros((len(test_dataset), output_dim))
-        test_targets = np.zeros((len(test_dataset), output_dim))
-        index = 0
-        with torch.no_grad():
-            model.eval()
-            for batch,inputs in enumerate(test_loader):
-                X = inputs['uplink'].float().to(device)
-                y = inputs['downlink'].float().to(device)
-                y_pred = model.forward(X)
-                test_preds[index:index+X.shape[0], :] = y_pred.cpu().detach().squeeze().numpy()
-                test_targets[index:index+X.shape[0], :] = y.cpu().detach().squeeze().numpy()
-                index = index+X.shape[0]
-                logger = str(index)+'/'+str(len(test_dataset))
-                if batch == len(test_loader)-1:
-                    print(logger)
-                else:
-                    print(logger, end='\r')
-        # nmse computation
-        test_nmse_autoencoder = nmse(test_targets, test_preds)
-        print("Test nmse = {}".format(test_nmse_autoencoder))
-        # multiply by std and add mean to predictions
-        test_preds = output_std*test_preds + output_mean
-        # converting to complex array
-        test_preds = reconstruction(test_preds)
-        print("Saving the file at",params['autoencoder_save_path'])
-        # saving the predictions
-        savemat(
-                file_name=params['autoencoder_save_path'],
-                mdict={"channelgains":test_preds},
-                appendmat=False
-               )
-    
-    y = datetime.datetime.now()
-    print("Completed in {} seconds".format(round((y-x).total_seconds(), 5)))
-
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-c", "--config", help="path to the config file.", required=True)
     arguments = vars(parser.parse_args())
