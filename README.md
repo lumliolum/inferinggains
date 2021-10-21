@@ -1,28 +1,6 @@
 # INTRODUCTION
 
-## Uplink-Downlink Channel Prediction
 
-Scaling the number of antennas up is a key characterstic of current and future wireless
-systems. Realizing the multiplexing and beamforming gains of large number of antennas
-requires channel knowledge. Usually channel feedback from users are used to get the channel
-knowledge. This results in signalling overhead and wastage of radio resources.
-Suppose we know the channels between a user and a certain set of antennas at one frequency
-band, can we map this knowledge to the channels at a different set of antennas and at
-different frequency band? Essentially this mapping means that we can directly predict the
-downlink channel gains from the uplink channel gains, eliminating the downlink training
-and feedback overhead in co-located/distributed FDD massive MIMO systems. Following
-[1], we use deep neural networks (DNN) to approximate the mapping between uplink and
-downlink channel gains, and the freely available Deep MIMO Dataset [2] will be used for
-training and testing.
-
-## Performance Evaluation of AutoEncoder
-
-Following [3], we present a communication system (transmitter, channel and receiver) as an
-autoencoder, and design an end to end reconstruction task that seeks to jointly optimize
-transmitter and receiver components in a single process. We compare the performance
-of end to end autoencoder for five different schemes. The key idea here is to represent
-transmitter, channel, and receiver as one deep neural network (NN) that can be trained as
-an autoencoder.
 
 ## Code Details
 
@@ -64,3 +42,7 @@ massive mimo applications,” arXiv preprint arXiv:1902.06435, 2019.
 mance evaluation of autoencoder for coding and modulation in wireless communica-
 tions,” in 2019 11th International Conference on Wireless Communications and Signal
 Processing (WCSP). IEEE, 2019, pp. 1–6.
+
+## Thesis Supervisor
+
+You can find about my supervisor Dr. Jobin Francis over [here](https://scholar.google.com/citations?user=a9Mpdm0AAAAJ)
