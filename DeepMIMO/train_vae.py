@@ -10,10 +10,10 @@ from scipy.io import loadmat, savemat
 import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader
 
-from .models import VAE
-from .datasets import DeepMIMODataset
-from .losses import VAELoss
-from .utils import read_yaml, set_seed, construction, mse, nmse, bps, reconstruction
+from models import VAE
+from datasets import DeepMIMODataset
+from losses import VAELoss
+from utils import read_yaml, set_seed, construction, mse, nmse, bps, reconstruction
 
 
 def main(filename):

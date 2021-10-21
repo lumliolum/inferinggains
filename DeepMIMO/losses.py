@@ -2,9 +2,9 @@ import torch
 import torch.nn as nn
 import numpy as np
 
-from loguru import logger
-logger.remove()
-logger.add("logs/loss.log")
+# from loguru import logger
+# logger.remove()
+# logger.add("logs/loss.log")
 
 class MSELoss(nn.MSELoss):
     def __init__(self):
@@ -30,9 +30,10 @@ class VAELoss(nn.Module):
 
     def forward(self, y_pred, y, mean, log_var):
         reconstruction_loss = self.mseloss(y_pred, y)
-        kl_loss = -0.5*torch.sum(1 + log_var - torch.pow(mean, 2) - torch.exp(log_var))
+        kl_loss = -0.5*torch.mean(torch.sum(1 + log_var - torch.pow(mean, 2) - torch.exp(log_var), dim=1))
         loss = reconstruction_loss + kl_loss
-        logger.info("loss = {}, reconstruction loss = {}, kl loss = {}".format(loss.item(), reconstruction_loss.item(), kl_loss.item()))
+        # logger.info("loss = {}, reconstruction loss = {}, kl loss = {}".format(loss.item(), reconstruction_loss.item(), kl_loss.item()))
+        # logger.info("mean = {}, log var = {}".format(mean, log_var))
         return loss
 
 

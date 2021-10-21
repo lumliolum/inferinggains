@@ -226,13 +226,14 @@ class VAE(nn.Module):
         self.input_dim = input_dim
         self.output_dim = output_dim
 
+        self.hidden_dim = 64
         # encoder
         self.encoder_layer1 = nn.Linear(in_features=self.input_dim, out_features=64)
-        self.encoder_layer2 = nn.Linear(in_features=64, out_features=10)
+        self.encoder_layer2 = nn.Linear(in_features=64, out_features=self.hidden_dim)
 
         # decoder
         # 10 includes both mean and std. after sampling we will get vectors of size 5.
-        self.decoder_layer1 = nn.Linear(in_features=5, out_features=64)
+        self.decoder_layer1 = nn.Linear(in_features=self.hidden_dim//2, out_features=64)
         self.decoder_layer2 = nn.Linear(in_features=64, out_features=self.output_dim)
 
         # relu
@@ -244,12 +245,13 @@ class VAE(nn.Module):
         e2 = self.encoder_layer2(e1)
 
         # the first half will be mean and second half will be log_var
-        mean = e2[:, :5]
-        log_var = e2[:, 5:]
+        mean = e2[:, :self.hidden_dim//2]
+        log_var = e2[:, self.hidden_dim//2:]
         std = torch.sqrt(torch.exp(log_var))
         # will draw samples from normal (0,1) which has same shape as std.
         eps = torch.randn_like(std)
         z = mean + eps*std
+        # z = mean
 
         # decoding
         d1 = self.relu(self.decoder_layer1(z))
