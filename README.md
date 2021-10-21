@@ -28,6 +28,8 @@ All the details are given in **`report.pdf`**.
 
 ## Code Details
 
+All the scripts are in `DeepMIMO` folder. `testing` contains some notebooks where we did some testing of different ideas.
+
 The configuration file is `config.yaml`. It has configurations for DNN (`fnn`), autoencoder and varitional autoencoder. The code uses pytorch for implementation.
 
 To run DNN, use
